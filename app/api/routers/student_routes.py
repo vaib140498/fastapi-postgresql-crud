@@ -13,12 +13,8 @@ repo = StudentRepository()
 async def create_student(
     student_data: StudentCreate, db: AsyncSession = Depends(get_db)
 ):
-    student = Student(
-        name=student_data.name,
-        branch=student_data.branch,
-        marks=student_data.marks,
-    )
-    return await repo.create_student(db, student)
+    
+    return await repo.create_student(db, student_data.model_dump())
 
 
 @router.get("/", response_model=list[StudentResponse])
@@ -40,9 +36,9 @@ async def update_student(
     student_data: StudentUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    student = await repo.update_student(
-        db, student_id, student_data.branch, student_data.marks
-    )
+    update_data = student_data.model_dump(exclude_unset=True, exclude_none=True)
+    
+    student = await repo.update_student(db, student_id, update_data)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
@@ -54,3 +50,15 @@ async def delete_student(student_id: int, db: AsyncSession = Depends(get_db)):
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return {"message": f"Student {student_id} deleted."}
+
+
+#To enter list of students in one go.
+@router.post("/bulk", response_model= list[StudentResponse])
+async def create_students(
+    students_data: list[StudentCreate],
+    db: AsyncSession = Depends(get_db)
+):
+    return await repo.create_students(
+        db,
+        [std.model_dump() for std in students_data]
+    )

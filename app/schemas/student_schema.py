@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic import ConfigDict
 
 
@@ -9,7 +9,8 @@ class StudentCreate(BaseModel):
 
 
 class StudentUpdate(BaseModel):
-    branch: str
+    name: str | None = Field(default=None, min_length=3)
+    branch: str | None = Field(default=None, min_length=2)
     marks: int | None = None
 
 
